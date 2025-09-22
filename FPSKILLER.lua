@@ -81,64 +81,120 @@ statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 statusLabel.TextSize = 9
 statusLabel.TextStrokeTransparency = 0.5
 
--- Función para crear lag en el servidor (afecta a todos)
+-- Función para crear lag MASIVO en el servidor (afecta a todos)
 local function startFPSKiller()
     local backpack = player:WaitForChild("Backpack")
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
     
+    -- Crear múltiples conexiones para máximo lag
     lagConnection = RunService.Heartbeat:Connect(function()
-        -- Método 1: Equipar/Desequipar super rápido (genera eventos de red)
-        for i = 1, 50 do -- Aumentamos las iteraciones
+        -- MÉTODO 1: SPAM EXTREMO DE TOOLS (necesitas muchos tools/accesorios)
+        for cycle = 1, 3 do
             for _, tool in ipairs(backpack:GetChildren()) do
                 if tool:IsA("Tool") then
-                    humanoid:EquipTool(tool)
-                    task.wait() -- Sin delay para máximo spam
-                    humanoid:UnequipTools()
-                end
-            end
-        end
-        
-        -- Método 2: Crear y destruir partes rápidamente
-        for i = 1, 100 do
-            local part = Instance.new("Part")
-            part.Parent = workspace
-            part.Position = character.HumanoidRootPart.Position + Vector3.new(math.random(-50,50), 0, math.random(-50,50))
-            part.Size = Vector3.new(0.1, 0.1, 0.1)
-            part.Material = Enum.Material.Neon
-            part.BrickColor = BrickColor.Random()
-            
-            -- Añadir físicas para más lag
-            local bodyVelocity = Instance.new("BodyVelocity")
-            bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-            bodyVelocity.Velocity = Vector3.new(math.random(-100,100), math.random(-100,100), math.random(-100,100))
-            bodyVelocity.Parent = part
-            
-            -- Destruir inmediatamente para spam
-            game:GetService("Debris"):AddItem(part, 0.1)
-        end
-        
-        -- Método 3: Spam de animaciones si hay tools
-        if #backpack:GetChildren() > 0 then
-            for i = 1, 20 do
-                for _, tool in ipairs(backpack:GetChildren()) do
-                    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                    -- Super spam de equipar/desequipar
+                    for rapid = 1, 100 do
                         humanoid:EquipTool(tool)
-                        -- Activar tool repetidamente
-                        tool:Activate()
-                        humanoid:UnequipTools()
+                        humanoid:UnequipTools() 
+                        if tool:FindFirstChild("Handle") then
+                            tool:Activate() -- Spam activate
+                        end
                     end
                 end
             end
         end
         
-        -- Método 4: Cambiar propiedades del personaje rápidamente
-        if character:FindFirstChild("HumanoidRootPart") then
-            local rootPart = character.HumanoidRootPart
-            for i = 1, 30 do
-                rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0.01, 0.01, 0.01)
-                humanoid.JumpPower = math.random(50, 200)
-                humanoid.WalkSpeed = math.random(16, 100)
+        -- MÉTODO 2: CREAR LAG CON ACCESORIOS DEL PERSONAJE
+        for _, accessory in ipairs(character:GetChildren()) do
+            if accessory:IsA("Accessory") and accessory:FindFirstChild("Handle") then
+                local handle = accessory.Handle
+                -- Spam de cambios en los accesorios
+                for spam = 1, 50 do
+                    handle.Transparency = math.random()
+                    handle.Reflectance = math.random()
+                    handle.Size = handle.Size * 0.99
+                    handle.Size = handle.Size * 1.01
+                    handle.CFrame = handle.CFrame * CFrame.Angles(0.1, 0.1, 0.1)
+                end
+            end
+        end
+        
+        -- MÉTODO 3: CREAR PARTES CON EFECTOS EXTREMOS
+        spawn(function()
+            for i = 1, 200 do
+                local part = Instance.new("Part")
+                part.Parent = workspace
+                part.Name = "LagPart"..i
+                part.Position = character.HumanoidRootPart.Position + Vector3.new(math.random(-100,100), math.random(0,50), math.random(-100,100))
+                part.Size = Vector3.new(math.random(1,10), math.random(1,10), math.random(1,10))
+                part.Material = Enum.Material.ForceField
+                part.BrickColor = BrickColor.Random()
+                part.TopSurface = Enum.SurfaceType.Smooth
+                part.CanCollide = false
+                
+                -- Añadir múltiples efectos físicos
+                local bodyVelocity = Instance.new("BodyVelocity", part)
+                bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                bodyVelocity.Velocity = Vector3.new(math.random(-200,200), math.random(-200,200), math.random(-200,200))
+                
+                local bodyAngularVelocity = Instance.new("BodyAngularVelocity", part)
+                bodyAngularVelocity.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+                bodyAngularVelocity.AngularVelocity = Vector3.new(math.random(-50,50), math.random(-50,50), math.random(-50,50))
+                
+                -- Partículas para más lag visual
+                local smoke = Instance.new("Smoke", part)
+                smoke.Size = 10
+                smoke.Opacity = 1
+                
+                local fire = Instance.new("Fire", part)
+                fire.Size = 10
+                fire.Heat = 10
+                
+                -- Sonidos spam
+                local sound = Instance.new("Sound", part)
+                sound.SoundId = "rbxasset://sounds/electronicpingshort.wav"
+                sound.Volume = 0.1
+                sound.Looped = true
+                sound:Play()
+                
+                -- Destruir después de causar lag
+                game:GetService("Debris"):AddItem(part, 0.5)
+            end
+        end)
+        
+        -- MÉTODO 4: MANIPULAR PERSONAJE DE FORMA EXTREMA
+        spawn(function()
+            for extreme = 1, 100 do
+                if character and character:FindFirstChild("HumanoidRootPart") then
+                    local rootPart = character.HumanoidRootPart
+                    -- Cambios extremos que se replican
+                    rootPart.CFrame = rootPart.CFrame * CFrame.new(math.random(-1,1), 0, math.random(-1,1))
+                    humanoid.JumpPower = math.random(0, 500)
+                    humanoid.WalkSpeed = math.random(0, 500)
+                    humanoid.MaxHealth = math.random(100, 1000)
+                    humanoid.Health = humanoid.MaxHealth
+                    
+                    -- Spam de animaciones
+                    humanoid.Sit = not humanoid.Sit
+                    humanoid.PlatformStand = not humanoid.PlatformStand
+                end
+            end
+        end)
+        
+        -- MÉTODO 5: SPAM DE REMOTE EVENTS (si hay tools con scripts)
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                spawn(function()
+                    for remote = 1, 50 do
+                        humanoid:EquipTool(tool)
+                        if tool:FindFirstChild("Handle") then
+                            tool:Activate()
+                            tool:Deactivate()
+                        end
+                        humanoid:UnequipTools()
+                    end
+                end)
             end
         end
     end)

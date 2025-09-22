@@ -81,39 +81,64 @@ statusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
 statusLabel.TextSize = 9
 statusLabel.TextStrokeTransparency = 0.5
 
--- Función para equipar y desequipar tools super rápido
+-- Función para crear lag en el servidor (afecta a todos)
 local function startFPSKiller()
     local backpack = player:WaitForChild("Backpack")
     local character = player.Character or player.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
     
     lagConnection = RunService.Heartbeat:Connect(function()
-        -- Obtener todos los tools del backpack
-        local tools = backpack:GetChildren()
-        
-        -- Equipar todos los tools de una vez
-        for _, tool in ipairs(tools) do
-            if tool:IsA("Tool") then
-                humanoid:EquipTool(tool)
-                wait(0.001) -- Micro delay para causar más lag
-            end
-        end
-        
-        -- Desequipar todos los tools
-        for _, tool in ipairs(character:GetChildren()) do
-            if tool:IsA("Tool") then
-                humanoid:UnequipTools()
-                wait(0.001) -- Micro delay para causar más lag
-            end
-        end
-        
-        -- Método alternativo más agresivo
-        for i = 1, 10 do
+        -- Método 1: Equipar/Desequipar super rápido (genera eventos de red)
+        for i = 1, 50 do -- Aumentamos las iteraciones
             for _, tool in ipairs(backpack:GetChildren()) do
                 if tool:IsA("Tool") then
                     humanoid:EquipTool(tool)
+                    task.wait() -- Sin delay para máximo spam
                     humanoid:UnequipTools()
                 end
+            end
+        end
+        
+        -- Método 2: Crear y destruir partes rápidamente
+        for i = 1, 100 do
+            local part = Instance.new("Part")
+            part.Parent = workspace
+            part.Position = character.HumanoidRootPart.Position + Vector3.new(math.random(-50,50), 0, math.random(-50,50))
+            part.Size = Vector3.new(0.1, 0.1, 0.1)
+            part.Material = Enum.Material.Neon
+            part.BrickColor = BrickColor.Random()
+            
+            -- Añadir físicas para más lag
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+            bodyVelocity.Velocity = Vector3.new(math.random(-100,100), math.random(-100,100), math.random(-100,100))
+            bodyVelocity.Parent = part
+            
+            -- Destruir inmediatamente para spam
+            game:GetService("Debris"):AddItem(part, 0.1)
+        end
+        
+        -- Método 3: Spam de animaciones si hay tools
+        if #backpack:GetChildren() > 0 then
+            for i = 1, 20 do
+                for _, tool in ipairs(backpack:GetChildren()) do
+                    if tool:IsA("Tool") and tool:FindFirstChild("Handle") then
+                        humanoid:EquipTool(tool)
+                        -- Activar tool repetidamente
+                        tool:Activate()
+                        humanoid:UnequipTools()
+                    end
+                end
+            end
+        end
+        
+        -- Método 4: Cambiar propiedades del personaje rápidamente
+        if character:FindFirstChild("HumanoidRootPart") then
+            local rootPart = character.HumanoidRootPart
+            for i = 1, 30 do
+                rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0.01, 0.01, 0.01)
+                humanoid.JumpPower = math.random(50, 200)
+                humanoid.WalkSpeed = math.random(16, 100)
             end
         end
     end)

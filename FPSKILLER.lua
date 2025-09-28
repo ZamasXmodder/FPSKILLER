@@ -1,201 +1,230 @@
--- Script para obtener información del servidor actual
--- Ejecuta esto en tu servidor y copia la información que aparezca
+-- GUI SCRIPT PARA TELEPORT AUTOMÁTICO
+-- Script para unirse automáticamente al servidor específico
 
--- Crear GUI para mostrar la información
+-- Información del servidor objetivo
+local TARGET_PLACE_ID = 109983668079237
+local TARGET_JOB_ID = "a0ff3820-5141-4cd9-ae1a-f6097a0e2199"
+local SERVER_NAME = "Steal a Braincrot - Server Privado"
+
+-- Servicios necesarios
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+-- Crear GUI
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local TitleLabel = Instance.new("TextLabel")
-local InfoFrame = Instance.new("ScrollingFrame")
+local ServerInfoLabel = Instance.new("TextLabel")
+local JoinButton = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
 local CloseButton = Instance.new("TextButton")
-local CopyButton = Instance.new("TextButton")
 
 -- Configurar ScreenGui
-ScreenGui.Name = "ServerInfoGUI"
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "ServerJoinGUI"
+ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
--- Frame principal
+-- Frame principal con gradiente
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BorderSizePixel = 0
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 500, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 400, 0, 300)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
--- Esquinas redondeadas
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = MainFrame
+-- Esquinas redondeadas para el frame principal
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 12)
+mainCorner.Parent = MainFrame
+
+-- Gradiente de fondo
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(45, 45, 65)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 35))
+}
+gradient.Rotation = 45
+gradient.Parent = MainFrame
+
+-- Sombra del frame
+local shadow = Instance.new("Frame")
+shadow.Name = "Shadow"
+shadow.Parent = ScreenGui
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.7
+shadow.BorderSizePixel = 0
+shadow.Position = UDim2.new(0.5, -198, 0.5, -148)
+shadow.Size = UDim2.new(0, 404, 0, 304)
+shadow.ZIndex = MainFrame.ZIndex - 1
+
+local shadowCorner = Instance.new("UICorner")
+shadowCorner.CornerRadius = UDim.new(0, 12)
+shadowCorner.Parent = shadow
 
 -- Título
 TitleLabel.Name = "TitleLabel"
 TitleLabel.Parent = MainFrame
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
-TitleLabel.Size = UDim2.new(1, 0, 0, 50)
+TitleLabel.Position = UDim2.new(0, 0, 0, 10)
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "SERVER INFO"
+TitleLabel.Text = "🎮 SERVER JOIN"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 20
+TitleLabel.TextSize = 22
+TitleLabel.TextStrokeTransparency = 0.8
+TitleLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
--- Frame de información
-InfoFrame.Name = "InfoFrame"
-InfoFrame.Parent = MainFrame
-InfoFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-InfoFrame.BorderSizePixel = 0
-InfoFrame.Position = UDim2.new(0, 10, 0, 60)
-InfoFrame.Size = UDim2.new(1, -20, 1, -120)
-InfoFrame.ScrollBarThickness = 5
+-- Información del servidor
+ServerInfoLabel.Name = "ServerInfoLabel"
+ServerInfoLabel.Parent = MainFrame
+ServerInfoLabel.BackgroundTransparency = 1
+ServerInfoLabel.Position = UDim2.new(0, 20, 0, 60)
+ServerInfoLabel.Size = UDim2.new(1, -40, 0, 80)
+ServerInfoLabel.Font = Enum.Font.Gotham
+ServerInfoLabel.Text = "🍃 " .. SERVER_NAME .. "\n\n📍 Place ID: " .. TARGET_PLACE_ID .. "\n🔗 Server: Privado"
+ServerInfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+ServerInfoLabel.TextSize = 14
+ServerInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+ServerInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+ServerInfoLabel.TextWrapped = true
 
-local infoCorner = Instance.new("UICorner")
-infoCorner.CornerRadius = UDim.new(0, 5)
-infoCorner.Parent = InfoFrame
+-- Botón de Join (Principal)
+JoinButton.Name = "JoinButton"
+JoinButton.Parent = MainFrame
+JoinButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+JoinButton.BorderSizePixel = 0
+JoinButton.Position = UDim2.new(0.5, -80, 0, 160)
+JoinButton.Size = UDim2.new(0, 160, 0, 45)
+JoinButton.Font = Enum.Font.GothamBold
+JoinButton.Text = "🚀 JOIN SERVER"
+JoinButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+JoinButton.TextSize = 16
+JoinButton.TextStrokeTransparency = 0.8
+
+-- Esquinas redondeadas para el botón
+local joinCorner = Instance.new("UICorner")
+joinCorner.CornerRadius = UDim.new(0, 8)
+joinCorner.Parent = JoinButton
+
+-- Gradiente del botón
+local joinGradient = Instance.new("UIGradient")
+joinGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 180, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 120, 40))
+}
+joinGradient.Rotation = 90
+joinGradient.Parent = JoinButton
+
+-- Label de status
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 20, 0, 220)
+StatusLabel.Size = UDim2.new(1, -40, 0, 30)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "⚡ Presiona JOIN para conectar al servidor"
+StatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+StatusLabel.TextSize = 12
+StatusLabel.TextWrapped = true
 
 -- Botón Cerrar
 CloseButton.Name = "CloseButton"
 CloseButton.Parent = MainFrame
-CloseButton.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+CloseButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 CloseButton.BorderSizePixel = 0
-CloseButton.Position = UDim2.new(1, -80, 1, -40)
-CloseButton.Size = UDim2.new(0, 70, 0, 30)
-CloseButton.Font = Enum.Font.Gotham
-CloseButton.Text = "Cerrar"
+CloseButton.Position = UDim2.new(1, -35, 0, 10)
+CloseButton.Size = UDim2.new(0, 25, 0, 25)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "✕"
 CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseButton.TextSize = 14
 
 local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0, 5)
+closeCorner.CornerRadius = UDim.new(0, 50)
 closeCorner.Parent = CloseButton
-
--- Botón Copiar
-CopyButton.Name = "CopyButton"
-CopyButton.Parent = MainFrame
-CopyButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-CopyButton.BorderSizePixel = 0
-CopyButton.Position = UDim2.new(0, 10, 1, -40)
-CopyButton.Size = UDim2.new(0, 100, 0, 30)
-CopyButton.Font = Enum.Font.Gotham
-CopyButton.Text = "Copiar Info"
-CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CopyButton.TextSize = 14
-
-local copyCorner = Instance.new("UICorner")
-copyCorner.CornerRadius = UDim.new(0, 5)
-copyCorner.Parent = CopyButton
-
--- Función para recopilar información del servidor
-local function getServerInfo()
-    local info = ""
-    
-    info = info .. "=== INFORMACIÓN DEL SERVIDOR ===\n\n"
-    
-    -- Place ID (lo más importante)
-    info = info .. "Place ID: " .. tostring(game.PlaceId) .. "\n"
-    
-    -- Job ID del servidor actual
-    info = info .. "Job ID: " .. tostring(game.JobId) .. "\n"
-    
-    -- Private Server ID (si es VIP server)
-    if game.PrivateServerId ~= "" then
-        info = info .. "Private Server ID: " .. tostring(game.PrivateServerId) .. "\n"
-    else
-        info = info .. "Private Server ID: No es servidor privado\n"
-    end
-    
-    -- VIP Server ID
-    if game.VIPServerId ~= "" then
-        info = info .. "VIP Server ID: " .. tostring(game.VIPServerId) .. "\n"
-    else
-        info = info .. "VIP Server ID: No es VIP server\n"
-    end
-    
-    -- Nombre del juego
-    info = info .. "Game Name: " .. tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name) .. "\n"
-    
-    -- Información adicional
-    info = info .. "\n=== INFORMACIÓN ADICIONAL ===\n"
-    info = info .. "Server Region: " .. tostring(game.LocalizationService.RobloxLocaleId) .. "\n"
-    info = info .. "Players Online: " .. tostring(#game.Players:GetPlayers()) .. "\n"
-    info = info .. "Max Players: " .. tostring(game.Players.MaxPlayers) .. "\n"
-    info = info .. "Creation Time: " .. tostring(workspace.DistributedGameTime) .. " segundos\n"
-    
-    info = info .. "\n=== PARA EL SCRIPT DE TELEPORT ===\n"
-    info = info .. "placeId = " .. tostring(game.PlaceId) .. "\n"
-    info = info .. 'jobId = "' .. tostring(game.JobId) .. '"\n'
-    if game.PrivateServerId ~= "" then
-        info = info .. 'privateServerId = "' .. tostring(game.PrivateServerId) .. '"\n'
-    end
-    
-    return info
-end
-
--- Crear label para mostrar la información
-local InfoLabel = Instance.new("TextLabel")
-InfoLabel.Name = "InfoLabel"
-InfoLabel.Parent = InfoFrame
-InfoLabel.BackgroundTransparency = 1
-InfoLabel.Position = UDim2.new(0, 10, 0, 10)
-InfoLabel.Size = UDim2.new(1, -20, 1, -20)
-InfoLabel.Font = Enum.Font.Code
-InfoLabel.Text = getServerInfo()
-InfoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-InfoLabel.TextSize = 12
-InfoLabel.TextXAlignment = Enum.TextXAlignment.Left
-InfoLabel.TextYAlignment = Enum.TextYAlignment.Top
-InfoLabel.TextWrapped = true
-
--- Ajustar el tamaño del contenido para el scroll
-local textService = game:GetService("TextService")
-local textSize = textService:GetTextSize(InfoLabel.Text, InfoLabel.TextSize, InfoLabel.Font, Vector2.new(InfoLabel.AbsoluteSize.X, math.huge))
-InfoLabel.Size = UDim2.new(1, -20, 0, textSize.Y + 20)
-InfoFrame.CanvasSize = UDim2.new(0, 0, 0, textSize.Y + 40)
-
--- Variable global para copiar
-_G.ServerInfoText = getServerInfo()
-
--- También mostrar en consola
-print("====================================")
-print("SERVER INFO SCRIPT")
-print("====================================")
-print(getServerInfo())
-print("====================================")
-print("INFO GUARDADA EN _G.ServerInfoText")
-print("====================================")
 
 -- Funciones de los botones
 CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+    -- Animación de cierre
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 0, 0, 0)})
+    closeTween:Play()
+    closeTween.Completed:Connect(function()
+        ScreenGui:Destroy()
+    end)
 end)
 
-CopyButton.MouseButton1Click:Connect(function()
-    -- Notificación de que se copió
-    local notification = Instance.new("TextLabel")
-    notification.Parent = ScreenGui
-    notification.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-    notification.BorderSizePixel = 0
-    notification.Position = UDim2.new(0.5, -100, 0, 20)
-    notification.Size = UDim2.new(0, 200, 0, 40)
-    notification.Font = Enum.Font.Gotham
-    notification.Text = "¡Información copiada!"
-    notification.TextColor3 = Color3.fromRGB(255, 255, 255)
-    notification.TextSize = 14
+-- Función principal de teleport
+local function joinServer()
+    StatusLabel.Text = "🔄 Conectando al servidor..."
+    StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
     
-    local notifCorner = Instance.new("UICorner")
-    notifCorner.CornerRadius = UDim.new(0, 5)
-    notifCorner.Parent = notification
+    JoinButton.Text = "⏳ CONECTANDO..."
+    JoinButton.BackgroundColor3 = Color3.fromRGB(150, 150, 50)
     
-    -- Hacer que desaparezca
-    game:GetService("TweenService"):Create(notification, TweenInfo.new(2), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
-    game:GetService("Debris"):AddItem(notification, 2)
+    -- Intentar teleport
+    pcall(function()
+        print("🚀 Intentando conectar al servidor...")
+        print("Place ID:", TARGET_PLACE_ID)
+        print("Job ID:", TARGET_JOB_ID)
+        
+        -- Método 1: TeleportToPlaceInstance (más directo)
+        TeleportService:TeleportToPlaceInstance(TARGET_PLACE_ID, TARGET_JOB_ID, Players.LocalPlayer)
+    end)
     
-    -- La info ya está en _G.ServerInfoText y en la consola
-    print("INFO COPIADA - Revisa _G.ServerInfoText o la consola")
+    -- Si el método principal falla, intentar método alternativo
+    wait(2)
+    
+    if Players.LocalPlayer.Parent then
+        StatusLabel.Text = "⚠️ Probando método alternativo..."
+        
+        pcall(function()
+            -- Método 2: Teleport normal
+            TeleportService:Teleport(TARGET_PLACE_ID, Players.LocalPlayer)
+        end)
+        
+        wait(2)
+        
+        if Players.LocalPlayer.Parent then
+            StatusLabel.Text = "❌ Error: No se pudo conectar automáticamente"
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            JoinButton.Text = "🚀 REINTENTAR"
+            JoinButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+            
+            print("❌ Teleport falló - El servidor podría estar offline o el Job ID cambió")
+        end
+    end
+end
+
+-- Conectar función al botón
+JoinButton.MouseButton1Click:Connect(joinServer)
+
+-- Efectos de hover para el botón
+JoinButton.MouseEnter:Connect(function()
+    local hoverTween = TweenService:Create(JoinButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 170, 0, 48)})
+    hoverTween:Play()
 end)
 
--- Mensaje final
-print("\n¡SCRIPT EJECUTADO EXITOSAMENTE!")
-print("- Revisa la ventana que apareció")
-print("- Toda la info también está en la consola")
-print("- Usa _G.ServerInfoText para acceder a la info")
+JoinButton.MouseLeave:Connect(function()
+    local leaveTween = TweenService:Create(JoinButton, TweenInfo.new(0.2), {Size = UDim2.new(0, 160, 0, 45)})
+    leaveTween:Play()
+end)
+
+-- Animación de entrada
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0, 400, 0, 300)})
+openTween:Play()
+
+-- Mensajes en consola
+print("====================================")
+print("🎮 SERVER JOIN SCRIPT CARGADO")
+print("====================================")
+print("📍 Target Place ID:", TARGET_PLACE_ID)
+print("🔗 Target Job ID:", TARGET_JOB_ID)
+print("🎯 Server:", SERVER_NAME)
+print("====================================")
+print("✅ GUI creado exitosamente!")
+print("💡 Presiona el botón JOIN para conectar")
+print("====================================")
